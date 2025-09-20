@@ -51,95 +51,12 @@
             flex-wrap: wrap;
         }
         
-        .instructions {
-            background-color: rgba(0,0,0,0.3);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            text-align: left;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-        
-        .instructions h3 {
-            color: #3498db;
-            margin: 0 0 10px 0;
-        }
-        
-        .virtual-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 15px 0;
-            gap: 10px;
-        }
-        
-        .control-row {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .virtual-btn {
-            width: 50px;
-            height: 50px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 2px;
-            user-select: none;
-            touch-action: manipulation;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .virtual-btn:active {
-            background-color: #2980b9;
-            transform: scale(0.95);
-        }
-        
-        .game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0,0,0,0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 20px;
-            display: none;
-            z-index: 1000;
-            max-width: 90vw;
-        }
-        
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            margin: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            touch-action: manipulation;
-        }
-        
-        button:hover, button:active {
-            background-color: #2980b9;
-        }
-        
         .status-message {
             margin: 10px 0;
             padding: 8px;
             border-radius: 5px;
             font-weight: bold;
+            font-size: 14px;
         }
         
         .food-counter {
@@ -154,35 +71,255 @@
             color: #27ae60;
         }
         
+        /* Modal Instructions */
+        .instructions-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .instructions-content {
+            background-color: #34495e;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        }
+        
+        .instructions-content h2 {
+            color: #3498db;
+            margin: 0 0 15px 0;
+            font-size: 24px;
+        }
+        
+        .instruction-item {
+            margin: 12px 0;
+            padding: 8px;
+            text-align: left;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        
+        .instruction-item strong {
+            color: #3498db;
+        }
+        
+        /* Ergonomic Mobile Controls */
+        .mobile-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .control-cross {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+        
+        .virtual-btn {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background-color: rgba(52, 152, 219, 0.9);
+            color: white;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.1s ease;
+        }
+        
+        .virtual-btn:active {
+            background-color: rgba(41, 128, 185, 0.9);
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        /* Cross layout positioning */
+        .btn-up {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .btn-down {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .btn-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .btn-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .controls-label {
+            color: #bdc3c7;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0,0,0,0.95);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 20px;
+            display: none;
+            z-index: 1500;
+            max-width: 90vw;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            touch-action: manipulation;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover, button:active {
+            background-color: #2980b9;
+        }
+        
+        .ok-button {
+            background-color: #27ae60;
+            font-size: 18px;
+            padding: 15px 30px;
+            margin-top: 20px;
+        }
+        
+        .ok-button:hover, .ok-button:active {
+            background-color: #229954;
+        }
+        
+        /* Hide mobile controls on desktop */
+        @media (min-width: 768px) {
+            .mobile-controls {
+                display: none;
+            }
+        }
+        
         @media (max-width: 600px) {
             canvas {
                 width: 100%;
-                height: 300px;
+                height: 250px;
             }
             
             .game-info {
                 font-size: 14px;
             }
             
+            .instruction-item {
+                font-size: 14px;
+            }
+            
             .virtual-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 16px;
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .control-cross {
+                width: 160px;
+                height: 160px;
+            }
+        }
+        
+        /* Very small screens */
+        @media (max-width: 400px) {
+            .instructions-content {
+                padding: 15px;
+            }
+            
+            .instruction-item {
+                font-size: 13px;
+                margin: 8px 0;
             }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="instructions">
-            <h3>🐍 Nokia Snake Game Instructions</h3>
-            <strong>Objective:</strong> Eat ALL yellow food and reach the EXIT door within 60 seconds!<br>
-            <strong>🟡 Do:</strong> Eat yellow food for points (10 pts each)<br>
-            <strong>❌ Don't:</strong> Hit red furry balls, gray obstacles, walls, or yourself<br>
-            <strong>🚪 Important:</strong> Door only opens when ALL food is eaten. Hitting a locked door = death!<br>
-            <strong>🎮 Controls:</strong> Use arrow keys or virtual buttons below
+    <!-- Instructions Modal -->
+    <div class="instructions-modal" id="instructionsModal">
+        <div class="instructions-content">
+            <h2>🐍 Nokia Snake Game</h2>
+            
+            <div class="instruction-item">
+                <strong>🎯 Objective:</strong> Eat ALL yellow food and reach the EXIT door within 60 seconds!
+            </div>
+            
+            <div class="instruction-item">
+                <strong>🟡 DO:</strong> Eat yellow food circles for points (10 pts each)
+            </div>
+            
+            <div class="instruction-item">
+                <strong>❌ DON'T HIT:</strong> Red furry balls, gray obstacles, walls, or yourself
+            </div>
+            
+            <div class="instruction-item">
+                <strong>🚪 IMPORTANT:</strong> Door only opens when ALL food is eaten. Hitting a locked door = DEATH!
+            </div>
+            
+            <div class="instruction-item">
+                <strong>🎮 CONTROLS:</strong> 
+                <br>• Desktop: Arrow keys
+                <br>• Mobile: Swipe on screen OR use virtual buttons at bottom
+            </div>
+            
+            <div class="instruction-item">
+                <strong>⚡ SPECIAL:</strong> Red furry balls move around - avoid them at all costs!
+            </div>
+            
+            <button class="ok-button" onclick="startGameFromInstructions()">
+                Got it! Let's Play! 🚀
+            </button>
         </div>
-        
+    </div>
+
+    <div class="game-container">
         <div class="game-info">
             <div>Score: <span id="score">0</span></div>
             <div class="food-counter">Food Left: <span id="foodCount">0</span></div>
@@ -195,21 +332,21 @@
         
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         
-        <div class="virtual-controls">
-            <div class="control-row">
-                <button class="virtual-btn" id="upBtn">↑</button>
-            </div>
-            <div class="control-row">
-                <button class="virtual-btn" id="leftBtn">←</button>
-                <button class="virtual-btn" id="downBtn">↓</button>
-                <button class="virtual-btn" id="rightBtn">→</button>
-            </div>
-        </div>
-        
         <div class="game-over" id="gameOver">
             <div id="gameOverText">Game Over!</div>
-            <button onclick="startGame()">Play Again</button>
+            <button onclick="showInstructions()">Play Again</button>
         </div>
+    </div>
+
+    <!-- Ergonomic Mobile Controls -->
+    <div class="mobile-controls">
+        <div class="control-cross">
+            <button class="virtual-btn btn-up" id="upBtn">↑</button>
+            <button class="virtual-btn btn-left" id="leftBtn">←</button>
+            <button class="virtual-btn btn-right" id="rightBtn">→</button>
+            <button class="virtual-btn btn-down" id="downBtn">↓</button>
+        </div>
+        <div class="controls-label">Swipe screen or use buttons</div>
     </div>
 
     <script>
@@ -221,12 +358,13 @@
         const doorStatusElement = document.getElementById('doorStatus');
         const gameOverElement = document.getElementById('gameOver');
         const gameOverText = document.getElementById('gameOverText');
+        const instructionsModal = document.getElementById('instructionsModal');
 
         // Mobile responsiveness
         function resizeCanvas() {
             const container = canvas.parentElement;
             const maxWidth = Math.min(600, container.clientWidth - 30);
-            const maxHeight = Math.min(400, window.innerHeight * 0.5);
+            const maxHeight = Math.min(400, window.innerHeight * 0.4);
             
             canvas.style.width = maxWidth + 'px';
             canvas.style.height = (maxWidth * 2/3) + 'px';
@@ -257,6 +395,23 @@
             doorOpen: false,
             totalFood: 0
         };
+
+        function showInstructions() {
+            instructionsModal.style.display = 'flex';
+            // Pause any running game
+            if (game.gameRunning) {
+                game.gameRunning = false;
+                clearInterval(game.gameInterval);
+                clearInterval(game.timerInterval);
+                clearInterval(game.spikeInterval);
+            }
+        }
+
+        function startGameFromInstructions() {
+            instructionsModal.style.display = 'none';
+            gameOverElement.style.display = 'none';
+            startGame();
+        }
 
         function initGame() {
             // Initialize snake in the center-left
@@ -615,7 +770,6 @@
         }
 
         function startGame() {
-            gameOverElement.style.display = 'none';
             initGame();
             updateDisplay();
             
@@ -712,36 +866,4 @@
             switch (e.key) {
                 case 'ArrowUp':
                     if (game.direction.y === 0) {
-                        game.direction = { x: 0, y: -1 };
-                    }
-                    break;
-                case 'ArrowDown':
-                    if (game.direction.y === 0) {
-                        game.direction = { x: 0, y: 1 };
-                    }
-                    break;
-                case 'ArrowLeft':
-                    if (game.direction.x === 0) {
-                        game.direction = { x: -1, y: 0 };
-                    }
-                    break;
-                case 'ArrowRight':
-                    if (game.direction.x === 0) {
-                        game.direction = { x: 1, y: 0 };
-                    }
-                    break;
-            }
-        });
-
-        // Game loop for drawing
-        function gameLoop() {
-            drawGame();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Start the game
-        startGame();
-        gameLoop();
-    </script>
-</body>
-</html>
+                        game.direction = { x: 0, y
