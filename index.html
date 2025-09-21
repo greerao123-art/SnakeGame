@@ -3,765 +3,965 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nokia Snake Game</title>
+    <title>Snake Game</title>
     <style>
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
         
         body {
-            margin: 0;
-            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            font-family: 'Courier New', monospace;
-            color: white;
-            touch-action: manipulation;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            padding: 20px;
         }
         
-        .game-container {
-            text-align: center;
-            background-color: rgba(52, 73, 94, 0.9);
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.7);
-            max-width: 100vw;
+        #game-container {
             width: 100%;
-            max-width: 650px;
-            margin-bottom: 220px; /* Add space for mobile controls */
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
         
-        canvas {
-            border: 3px solid #ecf0f1;
-            background-color: #1a1a1a;
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-            touch-action: none;
-        }
-        
-        .game-info {
+        #game-header {
+            width: 100%;
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            font-size: 16px;
-            flex-wrap: wrap;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
         }
         
-        .status-message {
-            margin: 10px 0;
-            padding: 8px;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 14px;
+        #stats {
+            display: flex;
+            gap: 20px;
         }
         
-        .food-counter { color: #f1c40f; }
-        .door-locked { color: #e74c3c; }
-        .door-open { color: #27ae60; }
-        
-        .instructions-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
+        #game-canvas {
+            background-color: #0f3460;
+            border: 3px solid #e94560;
+            border-radius: 10px;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.95);
+            max-width: 800px;
+            aspect-ratio: 16/9;
+        }
+        
+        #controls {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left down right";
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            color: white;
+            font-size: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 2000;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
-        .instructions-content {
-            background-color: #34495e;
-            padding: 25px;
-            border-radius: 15px;
-            max-width: 90vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+        .control-btn:active {
+            background: rgba(255, 255, 255, 0.4);
         }
         
-        .instructions-content h2 {
-            color: #3498db;
-            margin: 0 0 15px 0;
-            font-size: 24px;
-        }
+        #up { grid-area: up; }
+        #left { grid-area: left; }
+        #down { grid-area: down; }
+        #right { grid-area: right; }
         
-        .instruction-item {
-            margin: 12px 0;
-            padding: 8px;
-            text-align: left;
-            font-size: 16px;
-            line-height: 1.4;
-        }
-        
-        .instruction-item strong {
-            color: #3498db;
-        }
-        
-        .mobile-controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: block; /* Changed from flex to block to ensure visibility */
-            z-index: 2000; /* Higher z-index to ensure it's on top */
-            background-color: rgba(0,0,0,0.7);
+        #instructions, #speed-selection, #game-over {
+            background: rgba(0, 0, 0, 0.8);
             padding: 20px;
             border-radius: 15px;
-            border: 2px solid #3498db;
-        }
-        
-        .control-cross {
-            position: relative;
-            width: 160px;
-            height: 160px;
-            margin: 0 auto;
-        }
-        
-        .virtual-btn {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background-color: #e74c3c; /* Changed to bright red so they're easily visible */
-            color: white;
-            border: 3px solid #c0392b;
-            border-radius: 10px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            touch-action: manipulation;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.1s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            opacity: 1; /* Ensure they're fully visible */
-        }
-        
-        .virtual-btn:active {
-            background-color: #c0392b;
-            transform: scale(0.95);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        }
-        
-        .btn-up { top: 0; left: 50%; transform: translateX(-50%); }
-        .btn-down { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .btn-left { left: 0; top: 50%; transform: translateY(-50%); }
-        .btn-right { right: 0; top: 50%; transform: translateY(-50%); }
-        
-        .controls-label {
-            color: #ecf0f1;
-            font-size: 12px;
             text-align: center;
-            margin-top: 10px;
-            font-weight: bold;
+            max-width: 600px;
+            width: 100%;
         }
         
-        .game-over {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0,0,0,0.95);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            font-size: 20px;
-            display: none;
-            z-index: 1500;
-            max-width: 90vw;
+        h1 {
+            color: #e94560;
+            margin-bottom: 20px;
         }
         
-        button {
-            background-color: #3498db;
+        h2 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+        }
+        
+        ul {
+            text-align: left;
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, #e94560, #f72585);
             color: white;
             border: none;
-            padding: 12px 24px;
-            margin: 10px;
-            border-radius: 8px;
-            cursor: pointer;
+            padding: 12px 25px;
+            border-radius: 50px;
             font-size: 16px;
-            touch-action: manipulation;
-            transition: background-color 0.2s;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s;
         }
         
-        button:hover, button:active {
-            background-color: #2980b9;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
         }
         
-        .ok-button {
-            background-color: #27ae60;
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .speed-btn {
+            background: linear-gradient(to right, #4361ee, #4cc9f0);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #death-reason {
+            color: #e94560;
+            font-weight: bold;
+            margin: 15px 0;
             font-size: 18px;
-            padding: 15px 30px;
-            margin-top: 20px;
-        }
-        
-        .ok-button:hover, .ok-button:active {
-            background-color: #229954;
-        }
-        
-        @media (min-width: 768px) {
-            .mobile-controls {
-                display: none;
-            }
         }
         
         @media (max-width: 600px) {
-            canvas {
-                width: 100%;
-                height: 250px;
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
             }
             
-            .game-info {
-                font-size: 14px;
-            }
-            
-            .instruction-item {
-                font-size: 14px;
-            }
-            
-            .control-cross {
-                width: 180px;
-                height: 180px;
-            }
-            
-            .virtual-btn {
-                width: 55px;
-                height: 55px;
-                font-size: 22px;
-            }
-        }
-        
-        @media (max-width: 400px) {
-            .instructions-content {
-                padding: 15px;
-            }
-            
-            .instruction-item {
-                font-size: 13px;
-                margin: 8px 0;
+            #game-header {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="instructions-modal" id="instructionsModal">
-        <div class="instructions-content">
-            <h2>🐍 Nokia Snake Game</h2>
-            
-            <div class="instruction-item">
-                <strong>🎯 Objective:</strong> Eat ALL yellow food and reach the EXIT door within 60 seconds!
-            </div>
-            
-            <div class="instruction-item">
-                <strong>🟡 DO:</strong> Eat yellow food circles for points (10 pts each)
-            </div>
-            
-            <div class="instruction-item">
-                <strong>❌ DON'T HIT:</strong> Red furry balls, gray obstacles, walls, or yourself
-            </div>
-            
-            <div class="instruction-item">
-                <strong>🚪 IMPORTANT:</strong> Door only opens when ALL food is eaten. Hitting a locked door = DEATH!
-            </div>
-            
-            <div class="instruction-item">
-                <strong>🎮 CONTROLS:</strong> 
-                <br>• Desktop: Arrow keys
-                <br>• Mobile: Swipe on screen OR use virtual buttons at bottom
-            </div>
-            
-            <div class="instruction-item">
-                <strong>⚡ SPECIAL:</strong> Red furry balls move around - avoid them at all costs!
-            </div>
-            
-            <button class="ok-button" id="startGameBtn">
-                Got it! Let's Play! 🚀
-            </button>
+    <div id="game-container">
+        <div id="instructions">
+            <h1>Snake Game</h1>
+            <h2>Instructions</h2>
+            <ul>
+                <li>Game lasts for 2 minutes</li>
+                <li>Eat all 10 yellow food items to grow longer</li>
+                <li>Exit through the door only after eating all food</li>
+                <li>Avoid red crabs - they move and will kill you</li>
+                <li>Avoid grey brick obstacles</li>
+                <li>Don't hit the exit door before eating all food</li>
+                <li>Don't collide with yourself</li>
+                <li>Use arrow keys or the virtual buttons to control the snake</li>
+            </ul>
+            <button id="start-btn" class="btn">Start Game</button>
         </div>
-    </div>
 
-    <div class="game-container">
-        <div class="game-info">
-            <div>Score: <span id="score">0</span></div>
-            <div class="food-counter">Food Left: <span id="foodCount">0</span></div>
-            <div>Time: <span id="timer">60</span>s</div>
+        <div id="speed-selection" class="hidden">
+            <h2>Select Snake Speed</h2>
+            <button id="slow-btn" class="btn speed-btn">Slow</button>
+            <button id="medium-btn" class="btn speed-btn">Medium</button>
+            <button id="fast-btn" class="btn speed-btn">Fast</button>
         </div>
-        
-        <div class="status-message" id="doorStatus">
-            <span class="door-locked">🔒 Door is LOCKED - Eat all food first!</span>
-        </div>
-        
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
-        
-        <div class="game-over" id="gameOver">
-            <div id="gameOverText">Game Over!</div>
-            <button id="playAgainBtn">Play Again</button>
-        </div>
-    </div>
 
-    <div class="mobile-controls">
-        <div class="control-cross">
-            <button class="virtual-btn btn-up" id="upBtn">↑</button>
-            <button class="virtual-btn btn-left" id="leftBtn">←</button>
-            <button class="virtual-btn btn-right" id="rightBtn">→</button>
-            <button class="virtual-btn btn-down" id="downBtn">↓</button>
+        <div id="game-header" class="hidden">
+            <div id="stats">
+                <div>Food: <span id="food-count">0</span>/10</div>
+                <div>Time: <span id="timer">02:00</span></div>
+                <div>Score: <span id="score">0</span></div>
+            </div>
         </div>
-        <div class="controls-label">Swipe screen or use buttons</div>
+
+        <canvas id="game-canvas" class="hidden"></canvas>
+
+        <div id="controls" class="hidden">
+            <button id="up" class="control-btn">↑</button>
+            <button id="left" class="control-btn">←</button>
+            <button id="down" class="control-btn">↓</button>
+            <button id="right" class="control-btn">→</button>
+        </div>
+
+        <div id="game-over" class="hidden">
+            <h2>Game Over</h2>
+            <p id="death-reason"></p>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="play-again-btn" class="btn">Play Again</button>
+        </div>
     </div>
 
     <script>
-        // Game setup
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gridSize = 20;
-        const tileCount = { x: canvas.width / gridSize, y: canvas.height / gridSize };
-        
-        // Game state
-        let game = {
-            snake: [],
-            direction: { x: 1, y: 0 },
-            food: [],
-            obstacles: [],
-            spikes: [],
-            exitDoor: null,
-            score: 0,
-            timeLeft: 60,
-            gameRunning: false,
-            gameInterval: null,
-            timerInterval: null,
-            spikeInterval: null,
-            doorOpen: false
-        };
-        
-        // DOM elements
-        const elements = {
-            score: document.getElementById('score'),
-            timer: document.getElementById('timer'),
-            foodCount: document.getElementById('foodCount'),
-            doorStatus: document.getElementById('doorStatus'),
-            gameOver: document.getElementById('gameOver'),
-            gameOverText: document.getElementById('gameOverText'),
-            instructionsModal: document.getElementById('instructionsModal'),
-            startGameBtn: document.getElementById('startGameBtn'),
-            playAgainBtn: document.getElementById('playAgainBtn')
-        };
-        
-        // Mobile responsiveness
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            const maxWidth = Math.min(600, container.clientWidth - 30);
-            canvas.style.width = maxWidth + 'px';
-            canvas.style.height = (maxWidth * 2/3) + 'px';
-        }
-        
-        // Initialize game
-        function initGame() {
-            game.snake = [
-                { x: 5, y: Math.floor(tileCount.y / 2) },
-                { x: 4, y: Math.floor(tileCount.y / 2) },
-                { x: 3, y: Math.floor(tileCount.y / 2) }
-            ];
-            game.direction = { x: 1, y: 0 };
-            game.food = [];
-            game.obstacles = [];
-            game.spikes = [];
-            game.score = 0;
-            game.timeLeft = 60;
-            game.gameRunning = true;
-            game.doorOpen = false;
-            game.exitDoor = { x: tileCount.x - 2, y: Math.floor(tileCount.y / 2) };
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game elements
+            const instructions = document.getElementById('instructions');
+            const speedSelection = document.getElementById('speed-selection');
+            const gameHeader = document.getElementById('game-header');
+            const gameCanvas = document.getElementById('game-canvas');
+            const controls = document.getElementById('controls');
+            const gameOver = document.getElementById('game-over');
             
-            generateFood();
-            generateObstaclesAndSpikes();
-            updateFoodCounter();
-        }
-        
-        // Generate food
-        function generateFood() {
-            const foodCount = Math.floor(Math.random() * 4) + 5;
-            for (let i = 0; i < foodCount; i++) {
-                let newFood;
-                let attempts = 0;
-                do {
-                    newFood = {
-                        x: Math.floor(Math.random() * (tileCount.x - 4)) + 2,
-                        y: Math.floor(Math.random() * (tileCount.y - 4)) + 2
-                    };
-                    attempts++;
-                } while (isPositionOccupied(newFood.x, newFood.y) && attempts < 50);
+            // Buttons
+            const startBtn = document.getElementById('start-btn');
+            const slowBtn = document.getElementById('slow-btn');
+            const mediumBtn = document.getElementById('medium-btn');
+            const fastBtn = document.getElementById('fast-btn');
+            const playAgainBtn = document.getElementById('play-again-btn');
+            
+            // Control buttons
+            const upBtn = document.getElementById('up');
+            const leftBtn = document.getElementById('left');
+            const downBtn = document.getElementById('down');
+            const rightBtn = document.getElementById('right');
+            
+            // Stats elements
+            const foodCount = document.getElementById('food-count');
+            const timerElement = document.getElementById('timer');
+            const scoreElement = document.getElementById('score');
+            const finalScoreElement = document.getElementById('final-score');
+            const deathReasonElement = document.getElementById('death-reason');
+            
+            // Canvas context
+            const ctx = gameCanvas.getContext('2d');
+            
+            // Game variables
+            let snake = [];
+            let food = [];
+            let crabs = [];
+            let obstacles = [];
+            let exitDoor = null;
+            let direction = 'right';
+            let nextDirection = 'right';
+            let gameInterval = null;
+            let crabMoveInterval = null;
+            let timerInterval = null;
+            let gameSpeed = 150; // milliseconds
+            let foodEaten = 0;
+            let score = 0;
+            let gameTime = 120; // 2 minutes in seconds
+            let cellSize = 20;
+            let gridWidth = 0;
+            let gridHeight = 0;
+            let gameRunning = false;
+            
+            // Initialize game canvas size
+            function initCanvas() {
+                // Set canvas size based on container, maintaining aspect ratio
+                const containerWidth = gameCanvas.parentElement.clientWidth;
+                const calculatedHeight = containerWidth * (9/16);
                 
-                if (attempts < 50) game.food.push(newFood);
+                gameCanvas.width = containerWidth;
+                gameCanvas.height = calculatedHeight;
+                
+                // Calculate cell size based on canvas width (approx 40 cells wide)
+                cellSize = Math.floor(containerWidth / 40);
+                gridWidth = Math.floor(gameCanvas.width / cellSize);
+                gridHeight = Math.floor(gameCanvas.height / cellSize);
             }
-        }
-        
-        // Generate obstacles and spikes
-        function generateObstaclesAndSpikes() {
-            game.obstacles = [];
-            game.spikes = [];
             
-            // Obstacles
-            const obstacleCount = Math.floor(Math.random() * 4) + 3;
-            for (let i = 0; i < obstacleCount; i++) {
-                const length = Math.floor(Math.random() * 3) + 2;
-                const horizontal = Math.random() > 0.5;
-                let startX = Math.floor(Math.random() * (tileCount.x - (horizontal ? length : 1)));
-                let startY = Math.floor(Math.random() * (tileCount.y - (horizontal ? 1 : length)));
+            // Initialize game objects
+            function initGame() {
+                // Initialize snake in the middle of the grid
+                const startX = Math.floor(gridWidth / 4);
+                const startY = Math.floor(gridHeight / 2);
+                snake = [
+                    {x: startX, y: startY},
+                    {x: startX - 1, y: startY},
+                    {x: startX - 2, y: startY}
+                ];
                 
-                for (let j = 0; j < length; j++) {
-                    const obstacle = {
-                        x: startX + (horizontal ? j : 0),
-                        y: startY + (horizontal ? 0 : j)
+                // Create exactly 10 food items
+                food = [];
+                for (let i = 0; i < 10; i++) {
+                    addFood();
+                }
+                
+                // Create crabs (3 crabs)
+                crabs = [];
+                for (let i = 0; i < 3; i++) {
+                    addCrab();
+                }
+                
+                // Create obstacles (5-7 obstacles)
+                obstacles = [];
+                createObstacles();
+                
+                // Create exit door on the right side
+                const doorY = Math.floor(gridHeight / 2);
+                exitDoor = {x: gridWidth - 2, y: doorY, width: 1, height: 3};
+                
+                // Reset game state
+                direction = 'right';
+                nextDirection = 'right';
+                foodEaten = 0;
+                score = 0;
+                gameTime = 120;
+                
+                // Update UI
+                foodCount.textContent = '0';
+                scoreElement.textContent = '0';
+                timerElement.textContent = '02:00';
+                
+                // Draw initial game state
+                draw();
+            }
+            
+            // Add a new food item at a random position
+            function addFood() {
+                let newFood;
+                let overlapping;
+                
+                do {
+                    overlapping = false;
+                    newFood = {
+                        x: Math.floor(Math.random() * (gridWidth - 4)) + 2,
+                        y: Math.floor(Math.random() * (gridHeight - 4)) + 2
                     };
-                    if (!isPositionOccupied(obstacle.x, obstacle.y)) {
-                        game.obstacles.push(obstacle);
+                    
+                    // Check if overlapping with snake
+                    for (let segment of snake) {
+                        if (segment.x === newFood.x && segment.y === newFood.y) {
+                            overlapping = true;
+                            break;
+                        }
+                    }
+                    
+                    // Check if overlapping with existing food
+                    for (let f of food) {
+                        if (f.x === newFood.x && f.y === newFood.y) {
+                            overlapping = true;
+                            break;
+                        }
+                    }
+                    
+                    // Check if overlapping with obstacles
+                    for (let obstacle of obstacles) {
+                        for (let x = obstacle.x; x < obstacle.x + obstacle.width; x++) {
+                            for (let y = obstacle.y; y < obstacle.y + obstacle.height; y++) {
+                                if (x === newFood.x && y === newFood.y) {
+                                    overlapping = true;
+                                    break;
+                                }
+                            }
+                            if (overlapping) break;
+                        }
+                        if (overlapping) break;
+                    }
+                    
+                    // Check if overlapping with exit door
+                    if (exitDoor) {
+                        for (let x = exitDoor.x; x < exitDoor.x + exitDoor.width; x++) {
+                            for (let y = exitDoor.y; y < exitDoor.y + exitDoor.height; y++) {
+                                if (x === newFood.x && y === newFood.y) {
+                                    overlapping = true;
+                                    break;
+                                }
+                            }
+                            if (overlapping) break;
+                        }
+                    }
+                    
+                } while (overlapping);
+                
+                food.push(newFood);
+            }
+            
+            // Add a new crab at a random position
+            function addCrab() {
+                let newCrab;
+                let overlapping;
+                
+                do {
+                    overlapping = false;
+                    newCrab = {
+                        x: Math.floor(Math.random() * (gridWidth - 6)) + 3,
+                        y: Math.floor(Math.random() * (gridHeight - 6)) + 3,
+                        direction: ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)]
+                    };
+                    
+                    // Check if overlapping with snake
+                    for (let segment of snake) {
+                        if (segment.x === newCrab.x && segment.y === newCrab.y) {
+                            overlapping = true;
+                            break;
+                        }
+                    }
+                    
+                    // Check if overlapping with food
+                    for (let f of food) {
+                        if (f.x === newCrab.x && f.y === newCrab.y) {
+                            overlapping = true;
+                            break;
+                        }
+                    }
+                    
+                    // Check if overlapping with obstacles
+                    for (let obstacle of obstacles) {
+                        for (let x = obstacle.x; x < obstacle.x + obstacle.width; x++) {
+                            for (let y = obstacle.y; y < obstacle.y + obstacle.height; y++) {
+                                if (x === newCrab.x && y === newCrab.y) {
+                                    overlapping = true;
+                                    break;
+                                }
+                            }
+                            if (overlapping) break;
+                        }
+                        if (overlapping) break;
+                    }
+                    
+                    // Check if overlapping with exit door
+                    if (exitDoor) {
+                        for (let x = exitDoor.x; x < exitDoor.x + exitDoor.width; x++) {
+                            for (let y = exitDoor.y; y < exitDoor.y + exitDoor.height; y++) {
+                                if (x === newCrab.x && y === newCrab.y) {
+                                    overlapping = true;
+                                    break;
+                                }
+                            }
+                            if (overlapping) break;
+                        }
+                    }
+                    
+                    // Check if overlapping with other crabs
+                    for (let crab of crabs) {
+                        if (crab.x === newCrab.x && crab.y === newCrab.y) {
+                            overlapping = true;
+                            break;
+                        }
+                    }
+                    
+                } while (overlapping);
+                
+                crabs.push(newCrab);
+            }
+            
+            // Create obstacles in the game
+            function createObstacles() {
+                // Create 5-7 obstacles of varying sizes
+                const numObstacles = 5 + Math.floor(Math.random() * 3);
+                
+                for (let i = 0; i < numObstacles; i++) {
+                    let newObstacle;
+                    let overlapping;
+                    
+                    do {
+                        overlapping = false;
+                        const width = 1 + Math.floor(Math.random() * 4);
+                        const height = 1 + Math.floor(Math.random() * 3);
+                        
+                        newObstacle = {
+                            x: Math.floor(Math.random() * (gridWidth - width - 4)) + 2,
+                            y: Math.floor(Math.random() * (gridHeight - height - 4)) + 2,
+                            width: width,
+                            height: height
+                        };
+                        
+                        // Check if overlapping with snake
+                        for (let segment of snake) {
+                            if (segment.x >= newObstacle.x && segment.x < newObstacle.x + newObstacle.width &&
+                                segment.y >= newObstacle.y && segment.y < newObstacle.y + newObstacle.height) {
+                                overlapping = true;
+                                break;
+                            }
+                        }
+                        
+                        // Check if overlapping with food
+                        for (let f of food) {
+                            if (f.x >= newObstacle.x && f.x < newObstacle.x + newObstacle.width &&
+                                f.y >= newObstacle.y && f.y < newObstacle.y + newObstacle.height) {
+                                overlapping = true;
+                                break;
+                            }
+                        }
+                        
+                        // Check if overlapping with exit door
+                        if (exitDoor) {
+                            if (newObstacle.x < exitDoor.x + exitDoor.width &&
+                                newObstacle.x + newObstacle.width > exitDoor.x &&
+                                newObstacle.y < exitDoor.y + exitDoor.height &&
+                                newObstacle.y + newObstacle.height > exitDoor.y) {
+                                overlapping = true;
+                            }
+                        }
+                        
+                        // Check if overlapping with other obstacles
+                        for (let obstacle of obstacles) {
+                            if (newObstacle.x < obstacle.x + obstacle.width &&
+                                newObstacle.x + newObstacle.width > obstacle.x &&
+                                newObstacle.y < obstacle.y + obstacle.height &&
+                                newObstacle.y + newObstacle.height > obstacle.y) {
+                                overlapping = true;
+                                break;
+                            }
+                        }
+                        
+                    } while (overlapping);
+                    
+                    obstacles.push(newObstacle);
+                }
+            }
+            
+            // Move crabs randomly
+            function moveCrabs() {
+                for (let crab of crabs) {
+                    // Occasionally change direction (about 30% of the time)
+                    if (Math.random() < 0.3) {
+                        crab.direction = ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)];
+                    }
+                    
+                    let newX = crab.x;
+                    let newY = crab.y;
+                    
+                    switch (crab.direction) {
+                        case 'up': newY--; break;
+                        case 'down': newY++; break;
+                        case 'left': newX--; break;
+                        case 'right': newX++; break;
+                    }
+                    
+                    // Check if the new position is valid
+                    let canMove = true;
+                    
+                    // Check boundaries
+                    if (newX < 0 || newX >= gridWidth || newY < 0 || newY >= gridHeight) {
+                        canMove = false;
+                    }
+                    
+                    // Check obstacles
+                    for (let obstacle of obstacles) {
+                        if (newX >= obstacle.x && newX < obstacle.x + obstacle.width &&
+                            newY >= obstacle.y && newY < obstacle.y + obstacle.height) {
+                            canMove = false;
+                            break;
+                        }
+                    }
+                    
+                    // Check exit door
+                    if (exitDoor) {
+                        if (newX >= exitDoor.x && newX < exitDoor.x + exitDoor.width &&
+                            newY >= exitDoor.y && newY < exitDoor.y + exitDoor.height) {
+                            canMove = false;
+                        }
+                    }
+                    
+                    // Check other crabs
+                    for (let otherCrab of crabs) {
+                        if (otherCrab !== crab && otherCrab.x === newX && otherCrab.y === newY) {
+                            canMove = false;
+                            break;
+                        }
+                    }
+                    
+                    // Move if possible
+                    if (canMove) {
+                        crab.x = newX;
+                        crab.y = newY;
+                    } else {
+                        // Change direction if can't move
+                        crab.direction = ['up', 'down', 'left', 'right'][Math.floor(Math.random() * 4)];
                     }
                 }
             }
             
-            // Spikes
-            const spikeCount = Math.floor(Math.random() * 3) + 3;
-            for (let i = 0; i < spikeCount; i++) {
-                let newSpike;
-                let attempts = 0;
-                do {
-                    newSpike = {
-                        x: Math.floor(Math.random() * (tileCount.x - 4)) + 2,
-                        y: Math.floor(Math.random() * (tileCount.y - 4)) + 2,
-                        dx: (Math.random() - 0.5) * 0.1,
-                        dy: (Math.random() - 0.5) * 0.1,
-                        realX: 0,
-                        realY: 0
-                    };
-                    attempts++;
-                } while (isPositionOccupied(newSpike.x, newSpike.y) && attempts < 30);
+            // Main game update function
+            function update() {
+                // Update direction
+                direction = nextDirection;
                 
-                newSpike.realX = newSpike.x;
-                newSpike.realY = newSpike.y;
-                if (attempts < 30) game.spikes.push(newSpike);
-            }
-        }
-        
-        // Check if position occupied
-        function isPositionOccupied(x, y) {
-            return game.snake.some(s => s.x === x && s.y === y) ||
-                   game.food.some(f => f.x === x && f.y === y) ||
-                   game.obstacles.some(o => o.x === x && o.y === y) ||
-                   (game.exitDoor && game.exitDoor.x === x && game.exitDoor.y === y);
-        }
-        
-        // Move spikes
-        function moveSpikes() {
-            for (let spike of game.spikes) {
-                spike.realX += spike.dx;
-                spike.realY += spike.dy;
+                // Calculate new head position
+                const head = {...snake[0]};
                 
-                if (spike.realX <= 0 || spike.realX >= tileCount.x - 1) {
-                    spike.dx = -spike.dx;
-                    spike.realX = Math.max(0, Math.min(tileCount.x - 1, spike.realX));
-                }
-                if (spike.realY <= 0 || spike.realY >= tileCount.y - 1) {
-                    spike.dy = -spike.dy;
-                    spike.realY = Math.max(0, Math.min(tileCount.y - 1, spike.realY));
+                switch (direction) {
+                    case 'up': head.y--; break;
+                    case 'down': head.y++; break;
+                    case 'left': head.x--; break;
+                    case 'right': head.x++; break;
                 }
                 
-                spike.x = Math.round(spike.realX);
-                spike.y = Math.round(spike.realY);
-            }
-        }
-        
-        // Draw game
-        function drawGame() {
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Snake
-            for (let i = 0; i < game.snake.length; i++) {
-                const segment = game.snake[i];
-                ctx.fillStyle = i === 0 ? '#2ecc71' : '#27ae60';
-                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
-                
-                if (i === 0) {
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(segment.x * gridSize + 4, segment.y * gridSize + 4, 3, 3);
-                    ctx.fillRect(segment.x * gridSize + 12, segment.y * gridSize + 4, 3, 3);
+                // Check for game over conditions
+                // 1. Hit wall
+                if (head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight) {
+                    endGame("You hit the wall!");
+                    return;
                 }
-            }
-
-            // Food
-            ctx.fillStyle = '#f1c40f';
-            for (let food of game.food) {
-                ctx.beginPath();
-                ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, gridSize / 3, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-
-            // Obstacles
-            ctx.fillStyle = '#7f8c8d';
-            for (let obstacle of game.obstacles) {
-                ctx.fillRect(obstacle.x * gridSize, obstacle.y * gridSize, gridSize - 2, gridSize - 2);
-            }
-
-            // Spikes
-            for (let spike of game.spikes) {
-                const centerX = spike.realX * gridSize + gridSize / 2;
-                const centerY = spike.realY * gridSize + gridSize / 2;
-                const radius = gridSize / 3;
                 
-                ctx.fillStyle = '#e74c3c';
-                for (let i = 0; i < 12; i++) {
-                    const angle = (i * Math.PI) / 6;
-                    const fuzzX = centerX + Math.cos(angle) * (radius / 2);
-                    const fuzzY = centerY + Math.sin(angle) * (radius / 2);
+                // 2. Hit self
+                for (let i = 0; i < snake.length; i++) {
+                    if (snake[i].x === head.x && snake[i].y === head.y) {
+                        endGame("You collided with yourself!");
+                        return;
+                    }
+                }
+                
+                // 3. Hit obstacle
+                for (let obstacle of obstacles) {
+                    if (head.x >= obstacle.x && head.x < obstacle.x + obstacle.width &&
+                        head.y >= obstacle.y && head.y < obstacle.y + obstacle.height) {
+                        endGame("You hit an obstacle!");
+                        return;
+                    }
+                }
+                
+                // 4. Hit crab
+                for (let crab of crabs) {
+                    if (head.x === crab.x && head.y === crab.y) {
+                        endGame("A crab got you!");
+                        return;
+                    }
+                }
+                
+                // 5. Hit exit door without eating all food
+                if (exitDoor) {
+                    if (head.x >= exitDoor.x && head.x < exitDoor.x + exitDoor.width &&
+                        head.y >= exitDoor.y && head.y < exitDoor.y + exitDoor.height) {
+                        if (foodEaten < 10) {
+                            endGame("You exited before eating all food!");
+                            return;
+                        } else {
+                            // Win condition
+                            score += 500; // Bonus for winning
+                            endGame("You won! All food eaten and exited safely!", true);
+                            return;
+                        }
+                    }
+                }
+                
+                // Check if food eaten
+                let ateFood = false;
+                for (let i = 0; i < food.length; i++) {
+                    if (head.x === food[i].x && head.y === food[i].y) {
+                        // Remove the food (no new food is added)
+                        food.splice(i, 1);
+                        ateFood = true;
+                        foodEaten++;
+                        score += 100;
+                        break;
+                    }
+                }
+                
+                // Move snake
+                if (ateFood) {
+                    // Add new head without removing tail (snake grows)
+                    snake.unshift(head);
+                } else {
+                    // Add new head and remove tail
+                    snake.unshift(head);
+                    snake.pop();
+                }
+                
+                // Update UI
+                foodCount.textContent = foodEaten;
+                scoreElement.textContent = score;
+                
+                // Draw updated game state
+                draw();
+            }
+            
+            // Draw the game
+            function draw() {
+                // Clear canvas
+                ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+                
+                // Draw background grid
+                ctx.fillStyle = '#0f3460';
+                ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+                
+                // Draw snake
+                for (let i = 0; i < snake.length; i++) {
+                    const segment = snake[i];
+                    ctx.fillStyle = i === 0 ? '#4cc9f0' : '#4361ee';
+                    ctx.fillRect(
+                        segment.x * cellSize, 
+                        segment.y * cellSize, 
+                        cellSize, 
+                        cellSize
+                    );
+                    
+                    // Draw snake border
+                    ctx.strokeStyle = '#1a1a2e';
+                    ctx.strokeRect(
+                        segment.x * cellSize, 
+                        segment.y * cellSize, 
+                        cellSize, 
+                        cellSize
+                    );
+                }
+                
+                // Draw food
+                for (let f of food) {
+                    ctx.fillStyle = '#ffdd00';
                     ctx.beginPath();
-                    ctx.arc(fuzzX, fuzzY, 3, 0, 2 * Math.PI);
+                    ctx.arc(
+                        f.x * cellSize + cellSize/2,
+                        f.y * cellSize + cellSize/2,
+                        cellSize/2 - 2,
+                        0,
+                        Math.PI * 2
+                    );
                     ctx.fill();
                 }
                 
-                ctx.fillStyle = '#c0392b';
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius - 2, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-
-            // Exit door
-            if (game.exitDoor) {
-                const doorX = game.exitDoor.x * gridSize;
-                const doorY = game.exitDoor.y * gridSize;
+                // Draw crabs
+                for (let crab of crabs) {
+                    ctx.fillStyle = '#e94560';
+                    ctx.beginPath();
+                    ctx.arc(
+                        crab.x * cellSize + cellSize/2,
+                        crab.y * cellSize + cellSize/2,
+                        cellSize/2 - 2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // Draw legs
+                    ctx.strokeStyle = '#e94560';
+                    ctx.lineWidth = 2;
+                    
+                    // Top left leg
+                    ctx.beginPath();
+                    ctx.moveTo(crab.x * cellSize + cellSize/2, crab.y * cellSize + cellSize/2);
+                    ctx.lineTo(crab.x * cellSize, crab.y * cellSize);
+                    ctx.stroke();
+                    
+                    // Top right leg
+                    ctx.beginPath();
+                    ctx.moveTo(crab.x * cellSize + cellSize/2, crab.y * cellSize + cellSize/2);
+                    ctx.lineTo(crab.x * cellSize + cellSize, crab.y * cellSize);
+                    ctx.stroke();
+                    
+                    // Bottom left leg
+                    ctx.beginPath();
+                    ctx.moveTo(crab.x * cellSize + cellSize/2, crab.y * cellSize + cellSize/2);
+                    ctx.lineTo(crab.x * cellSize, crab.y * cellSize + cellSize);
+                    ctx.stroke();
+                    
+                    // Bottom right leg
+                    ctx.beginPath();
+                    ctx.moveTo(crab.x * cellSize + cellSize/2, crab.y * cellSize + cellSize/2);
+                    ctx.lineTo(crab.x * cellSize + cellSize, crab.y * cellSize + cellSize);
+                    ctx.stroke();
+                }
                 
-                ctx.fillStyle = game.doorOpen ? '#27ae60' : '#7f8c8d';
-                ctx.fillRect(doorX, doorY, gridSize - 2, gridSize - 2);
+                // Draw obstacles
+                for (let obstacle of obstacles) {
+                    ctx.fillStyle = '#7f8c8d';
+                    ctx.fillRect(
+                        obstacle.x * cellSize,
+                        obstacle.y * cellSize,
+                        obstacle.width * cellSize,
+                        obstacle.height * cellSize
+                    );
+                    
+                    // Draw brick patterns
+                    ctx.strokeStyle = '#2c3e50';
+                    ctx.lineWidth = 1;
+                    
+                    for (let x = 0; x < obstacle.width; x++) {
+                        for (let y = 0; y < obstacle.height; y++) {
+                            ctx.strokeRect(
+                                (obstacle.x + x) * cellSize,
+                                (obstacle.y + y) * cellSize,
+                                cellSize,
+                                cellSize
+                            );
+                        }
+                    }
+                }
                 
-                ctx.fillStyle = game.doorOpen ? '#2ecc71' : '#95a5a6';
-                ctx.fillRect(doorX + 2, doorY + 2, (gridSize / 2) - 3, gridSize - 6);
-                ctx.fillRect(doorX + (gridSize / 2) + 1, doorY + 2, (gridSize / 2) - 3, gridSize - 6);
-                
-                ctx.fillStyle = '#f39c12';
-                ctx.beginPath();
-                ctx.arc(doorX + 6, doorY + gridSize/2, 2, 0, 2 * Math.PI);
-                ctx.arc(doorX + gridSize - 6, doorY + gridSize/2, 2, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                ctx.fillStyle = game.doorOpen ? '#27ae60' : '#e74c3c';
-                ctx.font = '10px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(game.doorOpen ? 'OPEN' : 'LOCK', doorX + gridSize/2, doorY + gridSize - 3);
-            }
-        }
-        
-        // Update food counter
-        function updateFoodCounter() {
-            elements.foodCount.textContent = game.food.length;
-            if (game.food.length === 0) {
-                game.doorOpen = true;
-                elements.doorStatus.innerHTML = '<span class="door-open">🔓 Door is OPEN - Go to EXIT!</span>';
-            } else {
-                game.doorOpen = false;
-                elements.doorStatus.innerHTML = '<span class="door-locked">🔒 Door is LOCKED - Eat all food first!</span>';
-            }
-        }
-        
-        // Update game
-        function updateGame() {
-            if (!game.gameRunning) return;
-
-            moveSpikes();
-
-            const head = { ...game.snake[0] };
-            head.x += game.direction.x;
-            head.y += game.direction.y;
-
-            // Collision checks
-            if (head.x < 0 || head.x >= tileCount.x || head.y < 0 || head.y >= tileCount.y) {
-                return gameOver('Hit the border!');
-            }
-
-            if (game.snake.some(segment => head.x === segment.x && head.y === segment.y)) {
-                return gameOver('Hit yourself!');
-            }
-
-            if (game.obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y)) {
-                return gameOver('Hit an obstacle!');
-            }
-
-            if (game.spikes.some(spike => head.x === spike.x && head.y === spike.y)) {
-                return gameOver('Hit a red furry ball!');
-            }
-
-            if (game.exitDoor && head.x === game.exitDoor.x && head.y === game.exitDoor.y) {
-                return game.doorOpen ? gameWin() : gameOver('Door was locked! You must eat ALL food first!');
-            }
-
-            game.snake.unshift(head);
-
-            // Food collision
-            let foodEaten = false;
-            for (let i = game.food.length - 1; i >= 0; i--) {
-                if (head.x === game.food[i].x && head.y === game.food[i].y) {
-                    game.food.splice(i, 1);
-                    game.score += 10;
-                    foodEaten = true;
-                    updateFoodCounter();
-                    break;
+                // Draw exit door
+                if (exitDoor) {
+                    ctx.fillStyle = foodEaten === 10 ? '#2ecc71' : '#e74c3c';
+                    ctx.fillRect(
+                        exitDoor.x * cellSize,
+                        exitDoor.y * cellSize,
+                        exitDoor.width * cellSize,
+                        exitDoor.height * cellSize
+                    );
+                    
+                    // Draw door handle
+                    ctx.fillStyle = '#f1c40f';
+                    ctx.beginPath();
+                    ctx.arc(
+                        exitDoor.x * cellSize + cellSize/4,
+                        exitDoor.y * cellSize + cellSize * 1.5,
+                        cellSize/8,
+                        Math.PI / 2,
+                        Math.PI * 3/2
+                    );
+                    ctx.fill();
                 }
             }
-
-            if (!foodEaten) game.snake.pop();
-            updateDisplay();
-        }
-        
-        // Update display
-        function updateDisplay() {
-            elements.score.textContent = game.score;
-            elements.timer.textContent = game.timeLeft;
-        }
-        
-        // Game over
-        function gameOver(reason) {
-            game.gameRunning = false;
-            clearInterval(game.gameInterval);
-            clearInterval(game.timerInterval);
-            clearInterval(game.spikeInterval);
-            elements.gameOverText.textContent = reason || 'Game Over!';
-            elements.gameOver.style.display = 'block';
-        }
-        
-        // Game win
-        function gameWin() {
-            game.gameRunning = false;
-            clearInterval(game.gameInterval);
-            clearInterval(game.timerInterval);
-            clearInterval(game.spikeInterval);
-            elements.gameOverText.textContent = 'You Won! 🎉 Escaped through the door!';
-            elements.gameOver.style.display = 'block';
-        }
-        
-        // Start game
-        function startGame() {
-            initGame();
-            updateDisplay();
-            game.gameInterval = setInterval(updateGame, 200);
-            game.timerInterval = setInterval(() => {
-                game.timeLeft--;
-                if (game.timeLeft <= 0) gameOver('Time\'s up!');
-                updateDisplay();
-            }, 1000);
-            game.spikeInterval = setInterval(moveSpikes, 100);
-        }
-        
-        // Show instructions
-        function showInstructions() {
-            elements.instructionsModal.style.display = 'flex';
-            if (game.gameRunning) {
-                game.gameRunning = false;
-                clearInterval(game.gameInterval);
-                clearInterval(game.timerInterval);
-                clearInterval(game.spikeInterval);
-            }
-        }
-        
-        // Start from instructions
-        function startFromInstructions() {
-            elements.instructionsModal.style.display = 'none';
-            elements.gameOver.style.display = 'none';
-            startGame();
-        }
-        
-        // Touch controls
-        let touchStartX, touchStartY;
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            touchStartX = touch.clientX - rect.left;
-            touchStartY = touch.clientY - rect.top;
-        });
-        
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (!game.gameRunning || !touchStartX || !touchStartY) return;
             
-            const touch = e.changedTouches[0];
-            const rect = canvas.getBoundingClientRect();
-            const deltaX = (touch.clientX - rect.left) - touchStartX;
-            const deltaY = (touch.clientY - rect.top) - touchStartY;
-            const minDistance = 30;
-            
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minDistance) {
-                if (deltaX > 0 && game.direction.x === 0) game.direction = { x: 1, y: 0 };
-                else if (deltaX < 0 && game.direction.x === 0) game.direction = { x: -1, y: 0 };
-            } else if (Math.abs(deltaY) > minDistance) {
-                if (deltaY > 0 && game.direction.y === 0) game.direction = { x: 0, y: 1 };
-                else if (deltaY < 0 && game.direction.y === 0) game.direction = { x: 0, y: -1 };
+            // Update timer
+            function updateTimer() {
+                if (!gameRunning) return;
+                
+                gameTime--;
+                
+                const minutes = Math.floor(gameTime / 60);
+                const seconds = gameTime % 60;
+                
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (gameTime <= 0) {
+                    endGame("Time's up!");
+                }
             }
             
-            touchStartX = null;
-            touchStartY = null;
-        });
-        
-        // Virtual controls
-        document.getElementById('upBtn').addEventListener('click', () => {
-            if (game.gameRunning && game.direction.y === 0) game.direction = { x: 0, y: -1 };
-        });
-        document.getElementById('downBtn').addEventListener('click', () => {
-            if (game.gameRunning && game.direction.y === 0) game.direction = { x: 0, y: 1 };
-        });
-        document.getElementById('leftBtn').addEventListener('click', () => {
-            if (game.gameRunning && game.direction.x === 0) game.direction = { x: -1, y: 0 };
-        });
-        document.getElementById('rightBtn').addEventListener('click', () => {
-            if (game.gameRunning && game.direction.x === 0) game.direction = { x: 1, y: 0 };
-        });
-        
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            // Prevent default behavior for arrow keys to stop page scrolling
-            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                e.preventDefault();
+            // End the game
+            function endGame(reason, isWin = false) {
+                gameRunning = false;
+                
+                clearInterval(gameInterval);
+                clearInterval(crabMoveInterval);
+                clearInterval(timerInterval);
+                
+                // Show game over screen
+                gameOver.classList.remove('hidden');
+                gameHeader.classList.add('hidden');
+                gameCanvas.classList.add('hidden');
+                controls.classList.add('hidden');
+                
+                // Set game over message
+                deathReasonElement.textContent = reason;
+                finalScoreElement.textContent = score;
+                
+                if (isWin) {
+                    deathReasonElement.style.color = '#2ecc71';
+                }
             }
             
-            if (!game.gameRunning) return;
-            
-            switch (e.key) {
-                case 'ArrowUp': 
-                    if (game.direction.y === 0) game.direction = { x: 0, y: -1 }; 
-                    break;
-                case 'ArrowDown': 
-                    if (game.direction.y === 0) game.direction = { x: 0, y: 1 }; 
-                    break;
-                case 'ArrowLeft': 
-                    if (game.direction.x === 0) game.direction = { x: -1, y: 0 }; 
-                    break;
-                case 'ArrowRight': 
-                    if (game.direction.x === 0) game.direction = { x: 1, y: 0 }; 
-                    break;
+            // Start the game
+            function startGame() {
+                initCanvas();
+                initGame();
+                
+                gameRunning = true;
+                
+                // Start game interval
+                gameInterval = setInterval(update, gameSpeed);
+                
+                // Start crab movement interval (slower than game update)
+                crabMoveInterval = setInterval(moveCrabs, gameSpeed * 3);
+                
+                // Start timer
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                // Show game elements
+                gameHeader.classList.remove('hidden');
+                gameCanvas.classList.remove('hidden');
+                controls.classList.remove('hidden');
+                speedSelection.classList.add('hidden');
             }
-        });
-        
-        // Game loop
-        function gameLoop() {
-            drawGame();
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // Event listeners
-        elements.startGameBtn.addEventListener('click', startFromInstructions);
-        elements.playAgainBtn.addEventListener('click', showInstructions);
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('load', () => {
-            resizeCanvas();
-            showInstructions();
-            gameLoop();
+            
+            // Set game speed
+            function setGameSpeed(speed) {
+                switch (speed) {
+                    case 'slow':
+                        gameSpeed = 200;
+                        break;
+                    case 'medium':
+                        gameSpeed = 150;
+                        break;
+                    case 'fast':
+                        gameSpeed = 100;
+                        break;
+                }
+            }
+            
+            // Event listeners
+            startBtn.addEventListener('click', () => {
+                instructions.classList.add('hidden');
+                speedSelection.classList.remove('hidden');
+            });
+            
+            slowBtn.addEventListener('click', () => {
+                setGameSpeed('slow');
+                startGame();
+            });
+            
+            mediumBtn.addEventListener('click', () => {
+                setGameSpeed('medium');
+                startGame();
+            });
+            
+            fastBtn.addEventListener('click', () => {
+                setGameSpeed('fast');
+                startGame();
+            });
+            
+            playAgainBtn.addEventListener('click', () => {
+                gameOver.classList.add('hidden');
+                speedSelection.classList.remove('hidden');
+            });
+            
+            // Keyboard controls
+            document.addEventListener('keydown', (e) => {
+                if (!gameRunning) return;
+                
+                switch (e.key) {
+                    case 'ArrowUp':
+                        if (direction !== 'down') nextDirection = 'up';
+                        break;
+                    case 'ArrowDown':
+                        if (direction !== 'up') nextDirection = 'down';
+                        break;
+                    case 'ArrowLeft':
+                        if (direction !== 'right') nextDirection = 'left';
+                        break;
+                    case 'ArrowRight':
+                        if (direction !== 'left') nextDirection = 'right';
+                        break;
+                }
+            });
+            
+            // Virtual control buttons
+            upBtn.addEventListener('click', () => {
+                if (gameRunning && direction !== 'down') nextDirection = 'up';
+            });
+            
+            downBtn.addEventListener('click', () => {
+                if (gameRunning && direction !== 'up') nextDirection = 'down';
+            });
+            
+            leftBtn.addEventListener('click', () => {
+                if (gameRunning && direction !== 'right') nextDirection = 'left';
+            });
+            
+            rightBtn.addEventListener('click', () => {
+                if (gameRunning && direction !== 'left') nextDirection = 'right';
+            });
+            
+            // Initialize canvas size on load and resize
+            window.addEventListener('load', initCanvas);
+            window.addEventListener('resize', initCanvas);
         });
     </script>
 </body>
